@@ -5,11 +5,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.security.KeyStore;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,27 +33,23 @@ public class WebServer {
     // Extracts a key and value from a POST request
     private static final Pattern postPattern = Pattern.compile("([^&=]+)=([^&]+)");
 
-    private static void processLogin(String reqBody, InetAddress ip) throws Exception {
-        String user = null;
-        String pass = null;
-
+    private static Map<String, String> parsePost(String reqBody) {
+        Map<String, String> ret = new HashMap<>();
         Matcher reg = postPattern.matcher(reqBody);
         while (reg.find()) {
-            String lval = reg.group(1);
-            // Request body contains % escape codes
-            String rval = URLDecoder.decode(reg.group(2), "UTF-8");
-            if (lval.equals("user")) {
-                user = rval;
-            } else if (lval.equals("pass")) {
-                pass = rval;
-            } else {
-                throw new Exception("Invalid request.");
+            try {
+                // Request body contains % escape codes
+                ret.put(reg.group(1), URLDecoder.decode(reg.group(2), "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                throw new AssertionError("UTF-8 doesn't exist.");
             }
         }
+        return ret;
+    }
 
+    private static void processLogin(String user, String pass, InetAddress ip) throws Exception {
         if (user == null)
             throw new Exception("Invalid request.");
-
         try {
             if (!Database.verifyPass(user, pass))
                 throw new Exception("Incorrect username or password.");
@@ -73,11 +72,19 @@ public class WebServer {
                 t.getRequestBody().read(req);
                 t.getRequestBody().close();
 
+                Map post = parsePost(new String(req));
+                String user = (String) post.get("user");
+                String pass = (String) post.get("pass");
+                InetAddress ip = t.getRemoteAddress().getAddress();
+
                 try {
-                    processLogin(new String(req), t.getRemoteAddress().getAddress());
+                    processLogin(user, pass, ip);
                     message = "You are now logged in.";
                 } catch (Exception e) {
                     message = e.getMessage();
+                    WebAuth.INSTANCE.getLogger().info(
+                        user + " failed to log in: " + message
+                    );
                 }
             }
 
