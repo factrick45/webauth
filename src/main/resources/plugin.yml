@@ -1,0 +1,21 @@
+main: ihm.webauth.WebAuth
+name: WebAuth
+version: 0.2.0
+commands:
+        changepass:
+                description: Change password
+                usage: /changepass <oldPassword> <newPassword> <confirmPassword>
+        logout:
+                description: Log out
+                usage: /logout
+        pass:
+                description: Set password for new accounts
+                usage: /pass <password> <confirmPassword>
+        webauth:
+                description: Admin commands for WebAuth
+                usage: /webauth add|del
+                permission: webauth.admin
+permissions:
+        webauth.admin:
+                description: Admin commands for WebAuth
+                default: op

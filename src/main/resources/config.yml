@@ -1,0 +1,8 @@
+# Password for RSA private key
+pass: webauth123
+# Port to run the HTTPS server on
+port: 8443
+# URL refered to when a user is kicked for not being authenticated
+refer-url: https://www.example.com:8443
+# Time in hours until a login session expires
+session-expiry: 72
