@@ -22,4 +22,12 @@ public class WebAuthListener implements Listener {
             "Please authenticate at \u00A74" + url
         );
     }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        if (Database.getPass(event.getPlayer().getName()) == null) {
+            event.getPlayer().sendMessage("\u00A76Your password is NOT set. Set it with /pass.");
+            event.getPlayer().sendTitle("\u00A76Your password is NOT set.", "Set it with /pass.");
+        }
+    }
 }
